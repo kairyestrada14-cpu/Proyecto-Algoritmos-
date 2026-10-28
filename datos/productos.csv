@@ -1,0 +1,3 @@
+﻿codigo,nombre,categoria,precio,cantidad,stock_minimo,activo
+P001,Cuaderno,Papelería,15.0,0,55,True
+P005,Camisa,Ropa,50.0,0,1,True

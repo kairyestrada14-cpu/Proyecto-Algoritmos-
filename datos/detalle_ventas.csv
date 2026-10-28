@@ -1,0 +1,3 @@
+﻿numero_venta,codigo_producto,nombre_producto,cantidad,precio_unitario,subtotal
+1,P001,Cuaderno,20,15.0,300.0
+1,P005,Camisa,2,50.0,100.0
