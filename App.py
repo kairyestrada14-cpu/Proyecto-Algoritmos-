@@ -389,7 +389,7 @@ with st.sidebar:
     st.markdown(
         '<div class="menu-brand">'
         '<div class="brand-title">Gestión Comercial</div>'
-        '<div class="brand-sub">Panel administrativo </div>'
+        '<div class="brand-sub">Panel de administración</div>'
         '</div>',
         unsafe_allow_html=True
     )
@@ -421,7 +421,7 @@ with st.sidebar:
     modulo = st.session_state.modulo_actual
 
     st.markdown(
-        '<div class="menu-footer">Sistema de Gestión Comercial </div>',
+        '<div class="menu-footer">Sistema de Gestión Comercial · v1.0</div>',
         unsafe_allow_html=True
     )
 
@@ -433,7 +433,7 @@ with st.sidebar:
 if modulo == "Inicio":
 
     st.markdown(
-        '<p class="main-title">¡Bienvenido!</p>',
+        '<p class="main-title">¡Bienvenido a tu negocio!</p>',
         unsafe_allow_html=True
     )
     st.markdown(
@@ -1445,7 +1445,9 @@ elif modulo == "Reportes y estadísticas":
                 }
             )
 
-            csv_ventas = ventas_mostrar.to_csv(index=False).encode("utf-8-sig")
+            csv_ventas = ventas_mostrar.to_csv(
+                index=False, sep=";"
+            ).encode("utf-8-sig")
             st.download_button(
                 "⬇️ Descargar ventas del período (CSV)",
                 data=csv_ventas,
@@ -1522,7 +1524,9 @@ elif modulo == "Reportes y estadísticas":
             use_container_width=True
         )
 
-        csv_productos = resumen_productos.to_csv(index=False).encode("utf-8-sig")
+        csv_productos = resumen_productos.to_csv(
+            index=False, sep=";"
+        ).encode("utf-8-sig")
         st.download_button(
             "⬇️ Descargar reporte de productos (CSV)",
             data=csv_productos,
