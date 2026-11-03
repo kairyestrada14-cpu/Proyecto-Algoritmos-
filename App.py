@@ -3,9 +3,8 @@ import pandas as pd
 from pathlib import Path
 import altair as alt
 
-# ==========================================
-# 1. CONFIGURACIÓN GENERAL
-# ==========================================
+
+#  CONFIGURACIÓN GENERAL
 
 st.set_page_config(
     page_title="Gestión Comercial",
@@ -14,9 +13,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==========================================
-# 2. DISEÑO Y COLORES
-# ==========================================
+
+# DISEÑO Y COLORES
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -42,7 +41,7 @@ st.markdown("""
         color: var(--texto);
     }
 
-    /* ===== BASE ===== */
+    /*  BASE */
     .stApp { background-color: var(--fondo-app); }
     .block-container {
         padding-top: 2.5rem;
@@ -50,7 +49,7 @@ st.markdown("""
         padding-right: 3rem;
     }
 
-    /* ===== BARRA SUPERIOR: ocultar Deploy/menú ===== */
+    /* BARRA SUPERIOR: Deploy/menú */
     header[data-testid="stHeader"] { background: transparent; }
     [data-testid="stAppDeployButton"] { display: none !important; }
     [data-testid="stDeployButton"]    { display: none !important; }
@@ -59,15 +58,15 @@ st.markdown("""
     #MainMenu                         { visibility: hidden !important; }
     footer                            { visibility: hidden !important; }
 
-    /* ===== SCROLLBAR ===== */
+    /* SCROLLBAR  */
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: var(--fondo-app); }
     ::-webkit-scrollbar-thumb { background: #C2C8E8; border-radius: 8px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--azul-acento); }
 
-    /* ======================================================
-       SIDEBAR (menú estilo dashboard, SIN iconos)
-    ====================================================== */
+    /*
+       SIDEBAR (menú)
+     */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0A0E52 0%, #141A86 100%);
         min-width: 280px !important;
@@ -149,13 +148,13 @@ st.markdown("""
         text-align: center;
     }
 
-    /* Ocultar aviso "Press Enter" */
+    /*  "Press Enter" */
     [data-testid="InputInstructions"]      { display: none !important; }
     [data-testid="stWidgetInstructions"]   { display: none !important; }
 
-    /* ======================================================
+    /* 
        TÍTULOS Y TEXTO
-    ====================================================== */
+     */
     .main-title {
         color: var(--azul-fondo);
         font-size: 34px;
@@ -174,7 +173,7 @@ st.markdown("""
     p, span, label, li { color: var(--texto); }
     a { color: var(--azul-acento); }
 
-    /* ===== TARJETAS DE MÉTRICAS ===== */
+    /*  TARJETAS DE MÉTRICAS  */
     [data-testid="stMetric"] {
         background-color: var(--blanco);
         border: 1px solid var(--borde-suave);
@@ -192,7 +191,7 @@ st.markdown("""
     [data-testid="stMetricValue"] { color: var(--azul-fondo); font-weight: 700; }
     [data-testid="stMetricDelta"] svg { stroke: var(--turquesa); }
 
-    /* ===== BOTONES (área principal) ===== */
+    /*  BOTONES (área principal)  */
     .block-container div.stButton > button {
         background-color: var(--azul-acento);
         color: #FFFFFF;
@@ -245,7 +244,7 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(59, 73, 224, 0.15) !important;
     }
 
-    /* ===== BOTÓN DEL FORMULARIO ===== */
+    /*  BOTÓN DEL FORMULARIO  */
     div[data-testid="stFormSubmitButton"] > button {
         background-color: var(--azul-acento) !important;
         color: #FFFFFF !important;
@@ -260,7 +259,7 @@ st.markdown("""
         border-color: var(--azul-hover) !important;
     }
 
-    /* ===== PESTAÑAS / EXPANDER / TABLAS / ALERTAS ===== */
+    /*  PESTAÑAS / EXPANDER / TABLAS / ALERTAS  */
     [data-testid="stTabs"] button { font-weight: 600; color: var(--texto-suave); }
     [data-testid="stTabs"] button[aria-selected="true"] {
         color: var(--azul-acento);
@@ -280,17 +279,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ==========================================
-# 3. CARPETA, ARCHIVOS CSV Y UTILIDADES
-# ==========================================
+
+#  CARPETA, ARCHIVOS CSV Y UTILIDADES
+
 
 CARPETA_DATOS = Path("datos")
 CARPETA_DATOS.mkdir(exist_ok=True)
 
-# Valores que se consideran "producto activo"
+# Valores que se consideran producto activo
 VALORES_ACTIVOS = {"true", "1", "si", "sí", "activo"}
 
-# Formato de fecha para mostrar en pantalla: 27 / 10 / 2026
+# Formato de fecha 
 FORMATO_FECHA = "%d / %m / %Y"
 
 COLUMNAS = {
@@ -354,9 +353,9 @@ def ahora_texto():
 
 inicializar_archivos()
 
-# ==========================================
-# 4. LEER INFORMACIÓN PARA EL INICIO
-# ==========================================
+
+#  LEER INFORMACIÓN PARA EL INICIO
+
 
 productos = leer_datos("productos")
 ventas = leer_datos("ventas")
@@ -379,17 +378,36 @@ activos = productos[es_activo(productos["activo"])]
 
 stock_bajo = activos[activos["cantidad"] <= activos["stock_minimo"]]
 
-ingresos = ventas["total"].sum()
 
-# ==========================================
-# 5. MENÚ LATERAL
-# ==========================================
+codigos_activos = set(activos["codigo"].astype(str))
+
+if (
+    not detalles.empty
+    and "codigo_producto" in detalles.columns
+    and "numero_venta" in detalles.columns
+    and "numero_venta" in ventas.columns
+):
+    ventas_de_activos = set(
+        detalles[detalles["codigo_producto"].astype(str).isin(codigos_activos)]
+        ["numero_venta"].astype(str)
+    )
+    ventas_activas = ventas[
+        ventas["numero_venta"].astype(str).isin(ventas_de_activos)
+    ]
+else:
+    ventas_activas = ventas
+
+ingresos = ventas_activas["total"].sum()
+
+
+#  MENÚ LATERAL
+
 
 with st.sidebar:
     st.markdown(
         '<div class="menu-brand">'
         '<div class="brand-title">Gestión Comercial</div>'
-        '<div class="brand-sub">Panel de administración</div>'
+
         '</div>',
         unsafe_allow_html=True
     )
@@ -421,24 +439,23 @@ with st.sidebar:
     modulo = st.session_state.modulo_actual
 
     st.markdown(
-        '<div class="menu-footer">Sistema de Gestión Comercial · v1.0</div>',
+        '<div class="menu-footer">Sistema de Gestión Comercial </div>',
         unsafe_allow_html=True
     )
 
 
-# ==========================================
-# 6. PÁGINA DE INICIO
-# ==========================================
+#  PÁGINA DE INICIO
+
 
 if modulo == "Inicio":
 
     st.markdown(
-        '<p class="main-title">¡Bienvenido a tu negocio!</p>',
+        '<p class="main-title">¡Bienvenido!</p>',
         unsafe_allow_html=True
     )
     st.markdown(
         '<p class="subtitle">'
-        'Aquí tienes el resumen general de tu gestión comercial.'
+        'Resumen general de tu gestión comercial.'
         '</p>',
         unsafe_allow_html=True
     )
@@ -447,7 +464,7 @@ if modulo == "Inicio":
     with c1:
         st.metric(label="📦 Productos activos", value=len(activos))
     with c2:
-        st.metric(label="🛋 Ventas registradas", value=len(ventas))
+        st.metric(label="🛋 Ventas registradas", value=len(ventas_activas))
     with c3:
         st.metric(label="💰 Ingresos totales", value=f"Q{ingresos:,.2f}")
     with c4:
@@ -460,8 +477,8 @@ if modulo == "Inicio":
     with izquierda:
         st.subheader("📈 Ingresos por fecha")
 
-        if not ventas.empty and "fecha" in ventas.columns:
-            grafica = ventas.copy()
+        if not ventas_activas.empty and "fecha" in ventas_activas.columns:
+            grafica = ventas_activas.copy()
             grafica["fecha"] = pd.to_datetime(grafica["fecha"], errors="coerce")
             grafica = grafica.dropna(subset=["fecha"])
 
@@ -542,9 +559,9 @@ if modulo == "Inicio":
             use_container_width=True
         )
 
-# ==========================================
-# 7. MÓDULO: GESTIÓN DE PRODUCTOS
-# ==========================================
+
+#  MÓDULO: GESTIÓN DE PRODUCTOS
+
 
 elif modulo == "Gestión de productos":
     st.markdown(
@@ -565,7 +582,7 @@ elif modulo == "Gestión de productos":
         "🚫 Desactivar"
     ])
 
-    # ----- PESTAÑA 1: REGISTRAR -----
+    # PESTAÑA 1: REGISTRAR
     with tab1:
         st.subheader("Registrar nuevo producto")
         st.caption("Completa los datos del producto. Los campos marcados son obligatorios.")
@@ -640,7 +657,7 @@ elif modulo == "Gestión de productos":
                 st.success("¡Producto registrado correctamente!")
                 st.rerun()
 
-    # ----- PESTAÑA 2: CONSULTAR -----
+    # PESTAÑA 2: CONSULTAR 
     with tab2:
         st.subheader("Catálogo de productos")
 
@@ -682,7 +699,7 @@ elif modulo == "Gestión de productos":
         else:
             st.info("No se encontraron productos.")
 
-    # ----- PESTAÑA 3: MODIFICAR -----
+    # PESTAÑA 3: MODIFICAR 
     with tab3:
         st.subheader("Modificar producto existente")
 
@@ -769,7 +786,7 @@ elif modulo == "Gestión de productos":
                     st.success("Producto actualizado correctamente.")
                     st.rerun()
 
-    # ----- PESTAÑA 4: DESACTIVAR -----
+    #  PESTAÑA 4: DESACTIVAR 
     with tab4:
         st.subheader("Desactivar producto")
 
@@ -817,9 +834,9 @@ elif modulo == "Gestión de productos":
                 st.rerun()
 
 
-# ==========================================
-# 8. MÓDULO: REGISTRO DE VENTAS
-# ==========================================
+
+#  MÓDULO: REGISTRO DE VENTAS
+
 
 elif modulo == "Registro de ventas":
     st.markdown(
@@ -1027,9 +1044,9 @@ elif modulo == "Registro de ventas":
             st.info("Selecciona los productos que deseas vender.")
 
 
-# ==========================================
-# 9. MÓDULO: CONTROL DE INVENTARIOS
-# ==========================================
+
+#  MÓDULO: CONTROL DE INVENTARIOS
+
 
 elif modulo == "Control de inventarios":
     st.markdown(
@@ -1049,7 +1066,7 @@ elif modulo == "Control de inventarios":
         "📤 Salida de productos"
     ])
 
-    # ----- PESTAÑA 1: EXISTENCIAS -----
+    # PESTAÑA 1: EXISTENCIAS 
     with tab1:
         st.subheader("Existencias actuales")
 
@@ -1104,7 +1121,7 @@ elif modulo == "Control de inventarios":
         else:
             st.info("Todavía no hay productos registrados.")
 
-    # ----- PESTAÑA 2: ENTRADA -----
+    #  PESTAÑA 2: ENTRADA 
     with tab2:
         st.subheader("Registrar entrada de inventario")
         st.write("Utiliza esta opción cuando recibas nuevas unidades de un producto.")
@@ -1163,7 +1180,7 @@ elif modulo == "Control de inventarios":
                 )
                 st.rerun()
 
-    # ----- PESTAÑA 3: SALIDA -----
+    #  PESTAÑA 3: SALIDA 
     with tab3:
         st.subheader("Registrar salida de inventario")
         st.write(
@@ -1243,7 +1260,7 @@ elif modulo == "Control de inventarios":
                     )
                     st.rerun()
 
-    # ----- HISTORIAL DE MOVIMIENTOS -----
+    # HISTORIAL DE MOVIMIENTOS 
     st.divider()
     st.subheader("📑 Historial de movimientos")
 
@@ -1268,9 +1285,9 @@ elif modulo == "Control de inventarios":
         st.info("Todavía no hay movimientos de inventario.")
 
 
-# ==========================================
-# 10. MÓDULO: REPORTES Y ESTADÍSTICAS
-# ==========================================
+
+#  MÓDULO: REPORTES Y ESTADÍSTICAS
+
 
 elif modulo == "Reportes y estadísticas":
     st.markdown(
@@ -1299,7 +1316,7 @@ elif modulo == "Reportes y estadísticas":
                 detalles_reporte[columna], errors="coerce"
             ).fillna(0)
 
-    # ----- INDICADORES GENERALES -----
+    #  INDICADORES GENERALES 
     st.subheader("Resumen general")
 
     numero_ventas = len(ventas_reporte)
@@ -1324,7 +1341,7 @@ elif modulo == "Reportes y estadísticas":
 
     st.divider()
 
-    # ----- FILTRAR VENTAS POR FECHA -----
+    #  FILTRAR VENTAS POR FECHA 
     st.subheader("Consultar ventas por período")
 
     if not ventas_reporte.empty:
@@ -1445,11 +1462,15 @@ elif modulo == "Reportes y estadísticas":
                 }
             )
 
-            csv_ventas = ventas_mostrar.to_csv(
+            csv_df = ventas_filtradas[columnas_ventas].copy()
+            csv_df["fecha"] = pd.to_datetime(
+                csv_df["fecha"], errors="coerce"
+            ).dt.strftime("%d/%m/%Y")
+            csv_ventas = csv_df.to_csv(
                 index=False, sep=";"
             ).encode("utf-8-sig")
             st.download_button(
-                "⬇️ Descargar ventas del período (CSV)",
+                " Descargar ventas",
                 data=csv_ventas,
                 file_name="reporte_ventas.csv",
                 mime="text/csv",
@@ -1462,7 +1483,7 @@ elif modulo == "Reportes y estadísticas":
 
     st.divider()
 
-    # ----- PRODUCTOS MÁS VENDIDOS -----
+    #  PRODUCTOS MÁS VENDIDOS 
     st.subheader("🏆 Productos más vendidos")
 
     if not detalles_reporte.empty:
@@ -1528,7 +1549,7 @@ elif modulo == "Reportes y estadísticas":
             index=False, sep=";"
         ).encode("utf-8-sig")
         st.download_button(
-            "⬇️ Descargar reporte de productos (CSV)",
+            " Descargar reporte de productos",
             data=csv_productos,
             file_name="reporte_productos_mas_vendidos.csv",
             mime="text/csv",
