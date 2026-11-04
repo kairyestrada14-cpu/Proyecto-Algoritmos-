@@ -1,1 +1,4 @@
 ﻿numero_venta,codigo_producto,nombre_producto,cantidad,precio_unitario,subtotal
+1,P001,Teclado,2,150.0,300.0
+2,P001,Teclado,2,150.0,300.0
+2,P002,CPU,1,150.0,150.0

@@ -1,2 +1,9 @@
 ﻿fecha,codigo_producto,tipo_movimiento,cantidad,descripcion
-
+2026-11-03 12:08:53,P001,Entrada inicial,10,Registro inicial del producto
+2026-11-03 14:44:49,P002,Entrada inicial,2,Registro inicial del producto
+2026-11-03 14:56:43,P003,Entrada inicial,5,Registro inicial del producto
+2026-11-03 15:18:49,P005,Entrada inicial,5,Registro inicial del producto
+2026-11-03 15:25:24,P001,Venta,2,Venta número 1
+2026-11-03 15:26:49,P001,Venta,2,Venta número 2
+2026-11-03 15:26:49,P002,Venta,1,Venta número 2
+2026-11-03 16:04:47,P006,Entrada inicial,5,Registro inicial del producto

@@ -1,2 +1,6 @@
 ﻿codigo,nombre,categoria,precio,cantidad,stock_minimo,activo
-
+P001,Teclado,Accesorio,150.0,6,3,False
+P002,CPU,Accesorio,150.0,1,1,False
+P003,Mouse,Accesorio,130.0,5,2,False
+P005,Lego,Juguete,200.0,5,2,False
+P006,Pulsera,Accesorio,300.0,5,1,True

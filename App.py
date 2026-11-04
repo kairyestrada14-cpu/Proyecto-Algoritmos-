@@ -553,11 +553,15 @@ if modulo == "Inicio":
             "Ingresa a Gestión de productos para comenzar."
         )
     else:
-        st.dataframe(
-            productos.tail(5).iloc[::-1],
-            hide_index=True,
-            use_container_width=True
-        )
+        activos_inicio = productos[es_activo(productos["activo"])]
+        if activos_inicio.empty:
+            st.info("No hay productos activos para mostrar.")
+        else:
+            st.dataframe(
+                activos_inicio.tail(5).iloc[::-1],
+                hide_index=True,
+                use_container_width=True
+            )
 
 
 #  MÓDULO: GESTIÓN DE PRODUCTOS
@@ -579,7 +583,7 @@ elif modulo == "Gestión de productos":
         "➕ Registrar",
         "🔎 Consultar",
         "✏️ Modificar",
-        "🚫 Desactivar"
+        "🔄 Activar / Desactivar"
     ])
 
     # PESTAÑA 1: REGISTRAR
@@ -786,54 +790,74 @@ elif modulo == "Gestión de productos":
                     st.success("Producto actualizado correctamente.")
                     st.rerun()
 
-    #  PESTAÑA 4: DESACTIVAR 
+    #  PESTAÑA 4: ACTIVAR / DESACTIVAR
     with tab4:
-        st.subheader("Desactivar producto")
+        st.subheader("Activar o desactivar producto")
 
         if productos.empty:
             st.info("No hay productos registrados.")
         else:
             codigos = productos["codigo"].astype(str).tolist()
 
-            codigo_desactivar = st.selectbox(
+            codigo_estado = st.selectbox(
                 "Selecciona el producto",
-                options=codigos, key="codigo_desactivar"
+                options=codigos, key="codigo_estado"
             )
-            producto_desactivar = productos[
-                productos["codigo"].astype(str) == codigo_desactivar
+            producto_estado = productos[
+                productos["codigo"].astype(str) == codigo_estado
             ].iloc[0]
+
+            esta_activo = str(producto_estado["activo"]).lower() in VALORES_ACTIVOS
 
             with st.container(border=True):
                 col_1, col_2, col_3 = st.columns(3)
-                col_1.metric("Nombre", str(producto_desactivar["nombre"]))
-                col_2.metric("Categoría", str(producto_desactivar["categoria"]))
-                esta_activo = str(producto_desactivar["activo"]).lower() in VALORES_ACTIVOS
+                col_1.metric("Nombre", str(producto_estado["nombre"]))
+                col_2.metric("Categoria", str(producto_estado["categoria"]))
                 col_3.metric("Estado actual", "Activo" if esta_activo else "Inactivo")
 
-            st.warning(
-                "Al desactivar el producto, dejará de contarse como activo "
-                "y no aparecerá en las alertas de inventario."
-            )
-
-            confirmar = st.checkbox(
-                "Confirmo que deseo desactivar este producto.",
-                key="confirmar_desactivar"
-            )
-
-            if st.button(
-                "🚫 Desactivar producto",
-                disabled=not confirmar,
-                use_container_width=True
-            ):
-                indice = productos.index[
-                    productos["codigo"].astype(str) == codigo_desactivar
-                ][0]
-                productos.at[indice, "activo"] = False
-                guardar_datos("productos", productos)
-                st.success("Producto desactivado correctamente.")
-                st.rerun()
-
-
+            # Segun el estado actual se muestra la accion contraria
+            if esta_activo:
+                st.warning(
+                    "Al desactivar el producto, dejara de contarse como activo "
+                    "y no aparecera en ventas, inventario ni reportes."
+                )
+                confirmar = st.checkbox(
+                    "Confirmo que deseo desactivar este producto.",
+                    key="confirmar_estado"
+                )
+                if st.button(
+                    "🚫 Desactivar producto",
+                    disabled=not confirmar,
+                    use_container_width=True
+                ):
+                    indice = productos.index[
+                        productos["codigo"].astype(str) == codigo_estado
+                    ][0]
+                    productos.at[indice, "activo"] = False
+                    guardar_datos("productos", productos)
+                    st.success("Producto desactivado correctamente.")
+                    st.rerun()
+            else:
+                st.info(
+                    "Este producto esta inactivo. Puedes activarlo de nuevo "
+                    "para que vuelva a estar disponible en ventas e inventario."
+                )
+                confirmar = st.checkbox(
+                    "Confirmo que deseo activar este producto.",
+                    key="confirmar_estado"
+                )
+                if st.button(
+                    "✅ Activar producto",
+                    disabled=not confirmar,
+                    use_container_width=True
+                ):
+                    indice = productos.index[
+                        productos["codigo"].astype(str) == codigo_estado
+                    ][0]
+                    productos.at[indice, "activo"] = True
+                    guardar_datos("productos", productos)
+                    st.success("Producto activado correctamente.")
+                    st.rerun()
 
 #  MÓDULO: REGISTRO DE VENTAS
 
@@ -1303,6 +1327,27 @@ elif modulo == "Reportes y estadísticas":
 
     ventas_reporte = ventas.copy()
     detalles_reporte = detalles.copy()
+
+    # Mostrar informacion de productos activos, para que los
+    # productos desactivados no se mezclen 
+    codigos_activos_rep = set(
+        productos[es_activo(productos["activo"])]["codigo"].astype(str)
+    )
+
+    if not detalles_reporte.empty:
+        detalles_reporte = detalles_reporte[
+            detalles_reporte["codigo_producto"].astype(str).isin(codigos_activos_rep)
+        ].copy()
+
+    if not ventas_reporte.empty and not detalles.empty:
+        ventas_con_activos = set(
+            detalles[
+                detalles["codigo_producto"].astype(str).isin(codigos_activos_rep)
+            ]["numero_venta"].astype(str)
+        )
+        ventas_reporte = ventas_reporte[
+            ventas_reporte["numero_venta"].astype(str).isin(ventas_con_activos)
+        ].copy()
 
     if not ventas_reporte.empty:
         for columna in ["total", "subtotal", "iva"]:
